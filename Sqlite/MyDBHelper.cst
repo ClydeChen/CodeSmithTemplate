@@ -1,0 +1,196 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" %>
+<%@ Property Name="Namespace" Default="MyNameSpace" Type="System.String" Category="Context" Description="TargetTable that the object is based on." %>
+<%@ Property Name="ConnectionString" Default="data source=""""" Type="System.String" Category="Context"%>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Configuration;
+using System.Data.SQLite;
+using System.Data;
+
+namespace <%=Namespace%>
+{
+    public class MyDBHelper
+    {
+        public static readonly string connstr = "<%=ConnectionString%>;
+ 
+        #region 执行Command.ExecuteNonQuery(),返回受影响的行数
+        /// <summary>
+        /// 执行Command.ExecuteNonQuery(),返回受影响的行数
+        /// </summary>
+        /// <param name="cmdText">执行的语句</param>
+        /// <param name="parameters">params传入的参数null</param>
+        /// <returns></returns>         
+        public static int ExecuteNonQuery(string cmdText,params SQLiteParameter[] parameters)
+        {
+            using (SQLiteConnection conn = new SQLiteConnection(connstr))
+            {
+                int result=-1;
+                conn.Open();
+                using (SQLiteCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = cmdText;
+                    if(parameters==null)
+                    result=cmd.ExecuteNonQuery();
+                    else
+                    {
+                    cmd.Parameters.AddRange(parameters);
+                    result=cmd.ExecuteNonQuery();
+                    cmd.Parameters.Clear();
+                    }
+                    return result;
+                }
+            }
+        }
+        #endregion
+        
+        #region 执行Command.ExecuteScalar(),返回首行首列
+        /// <summary>
+        /// 执行Command.ExecuteScalar(),返回首行首列
+        /// </summary>
+        /// <param name="cmdText">执行的语句</param>
+        /// <param name="parameters">params传入的参数null</param>
+        /// <returns></returns>    
+        public static object ExecuteScalar(string cmdText,
+            params SQLiteParameter[] parameters)
+        {
+            using (SQLiteConnection conn = new SQLiteConnection(connstr))
+            { 
+                object obj=null;
+                conn.Open();
+                using (SQLiteCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = cmdText;
+                    if(parameters==null)
+                    obj=cmd.ExecuteScalar();
+                    else
+                    {
+                    cmd.Parameters.AddRange(parameters);
+                    obj=cmd.ExecuteScalar();
+                    cmd.Parameters.Clear();
+                    }
+                    return obj;
+                }
+            }
+        }
+        #endregion
+
+        #region 执行SQLiteDataAdapter,返回DataTable
+        /// <summary>
+        /// 执行SQLiteDataAdapter,返回DataTable
+        /// </summary>
+        /// <param name="cmdText">执行的语句</param>
+        /// <param name="parameters">params传入的参数null</param>
+        /// <returns></returns>    
+        public static DataTable ExecuteDataTable(string cmdText,params SQLiteParameter[] parameters)
+        {
+            using (SQLiteConnection conn = new SQLiteConnection(connstr))
+            {
+                DataSet ds=new DataSet();
+                conn.Open();
+                using (SQLiteCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = cmdText;
+                    if(parameters!=null)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                         using (SQLiteDataAdapter adapter = new SQLiteDataAdapter(cmd))
+                        {                        
+                        adapter.Fill(ds);
+                        }
+                        cmd.Parameters.Clear();
+                    }
+                    else
+                    {
+                         using (SQLiteDataAdapter adapter = new SQLiteDataAdapter(cmd))
+                        {
+                        adapter.Fill(ds);                                               
+                        }                       
+                    }
+                    return ds.Tables[0]; 
+                }
+            }
+        }
+        #endregion
+
+        #region 执行ExecuteReader,返回SQLiteDataReader
+        /// <summary>
+        /// 执行ExecuteReader,返回SQLiteDataReader
+        /// </summary>
+        /// <param name="cmdText">执行的语句</param>
+        /// <param name="parameters">params传入的参数null</param>
+        /// <returns></returns>
+        public static SQLiteDataReader ExecuteDataReader(string cmdText, params SQLiteParameter[] parameters)
+        {
+            SQLiteConnection conn = new SQLiteConnection(connstr);
+            SQLiteDataReader read=null;
+            conn.Open();
+            using (SQLiteCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = cmdText;
+                if(parameters!=null)
+                { 
+                    cmd.Parameters.AddRange(parameters);
+                    read=cmd.ExecuteReader(CommandBehavior.CloseConnection);
+                    cmd.Parameters.Clear();
+                }
+                else
+                {
+                    read=cmd.ExecuteReader(CommandBehavior.CloseConnection);                    
+                }
+                return read;
+            }
+        }
+		#endregion
+        
+        #region 返回查询后的数据表第一行DataRow
+        /// <summary>
+        /// 返回查询后的数据表第一行DataRow
+        /// </summary>
+        /// <param name="cmdText">执行语句</param>
+        /// <param name="parameters">params参数集合</param>
+        public DataRow GetDataRow(string cmdText, params SQLiteParameter[] parameters)
+        {
+            DataTable dt=ExecuteDataTable(cmdText, parameters);
+                if (dt.Rows.Count > 0)
+                    return dt.Rows[0];
+                else
+                    return null;
+            
+        }
+        #endregion
+        
+        #region 执行存储过程 ExecuteNonQuery(),返回受影响的行数
+        /// <summary>
+        /// 执行存储过程 ExecuteNonQuery(),返回受影响的行数
+        /// </summary>
+        /// <param name="cmdText">执行的语句</param>
+        /// <param name="parameters">params传入的参数null</param>
+        /// <returns></returns> 
+		public static int ExecuteStoredProcedure(string procName,params SQLiteParameter[] parameters)
+        {
+            SQLiteConnection conn = new SQLiteConnection(connstr);
+            int result=-1;
+            conn.Open();
+            using (SQLiteCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = procName;
+                cmd.CommandType = CommandType.StoredProcedure;
+                if(parameters!=null)
+                {
+                    cmd.Parameters.AddRange(parameters);
+                    result=cmd.ExecuteNonQuery();
+                    cmd.Parameters.Clear();
+                }
+                else
+                {
+                   cmd.Parameters.AddRange(parameters);
+                   result=cmd.ExecuteNonQuery(); 
+                }
+                return result;
+            }
+        }
+        #endregion
+    }
+}

@@ -1,4 +1,4 @@
-﻿<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8"	Src="ToolsCodeTemplate.cs" Inherits="ToolsCodeTemplate"%>
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8"	Src="MySqlToolsCodeTemplate.cs" Inherits="ToolsCodeTemplate"%>
 <%@ Property Name="TargetTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="TargetTable that the object is based on." %>
 
 <%@ Property Name="ModelsNamespace" Default="MyOffice.Models" Type="System.String" Category="Context" Description="TargetTable that the object is based on." %>

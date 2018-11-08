@@ -21,16 +21,16 @@ public class ToolsCodeTemplate:CodeTemplate
 		string result;
 		if ( table.ExtendedProperties.Contains("ModelName") )
 		{
-			result = ((string)table.ExtendedProperties["ModelName"].Value).Substring(3);	
+			result = ((string)table.ExtendedProperties["ModelName"].Value).Substring(0);	
 			//return MakePascal(result);        
 		}	
 		if (table.Name.EndsWith("s"))
 		{
-			result = MakeSingle(table.Name).Substring(3);
+			result = MakeSingle(table.Name).Substring(0);
 		}
 		else
 		{
-			result = table.Name.Substring(3);
+			result = table.Name.Substring(0);
 		}	
 		return MakePascal(result);
        
@@ -119,10 +119,6 @@ public class ToolsCodeTemplate:CodeTemplate
 	}
 	public void PrintHeader()
 	{
-		Response.WriteLine("//============================================================");
-		Response.WriteLine("//http://codelover.link author:李国宝");
-		Response.WriteLine("//============================================================");
-		Response.WriteLine();
 	}
 	
 	public string GetPKName(TableSchema TargetTable)

@@ -1,11 +1,10 @@
 ﻿<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" %>
 <%@ Property Name="Namespace" Default="MyNameSpace" Type="System.String" Category="Context" Description="TargetTable that the object is based on." %>
-<%@ Property Name="ConnectionString" Default="data source=""""" Type="System.String" Category="Context"%>
+<%@ Property Name="ConnectionPropertyName" Default="SQLiteConnectionString" Type="System.String" Category="Context"%>
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Configuration;
 using System.Data.SQLite;
 using System.Data;
 
@@ -13,7 +12,7 @@ namespace <%=Namespace%>
 {
     public class MyDBHelper
     {
-        public static readonly string connstr = "<%=ConnectionString%>;
+        public static readonly string connstr = System.Configuration.ConfigurationManager.AppSettings["SQLiteConnectionString"];
  
         #region 执行Command.ExecuteNonQuery(),返回受影响的行数
         /// <summary>

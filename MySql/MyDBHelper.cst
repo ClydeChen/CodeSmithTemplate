@@ -1,6 +1,6 @@
 ﻿<%@ CodeTemplate Language="C#" TargetLanguage="C#" ResponseEncoding="UTF-8" %>
 <%@ Property Name="Namespace" Default="MyNameSpace" Type="System.String" Category="Context" Description="TargetTable that the object is based on." %>
-<%@ Property Name="ConnectionString" Default="database=;Data Source=;User Id=;Password=;port=;SslMode=none" Type="System.String" Category="Context"%>
+<%@ Property Name="ConnectionStringPropertyName" Default="MySqlConnectionString" Type="System.String" Category="Context"%>
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +13,7 @@ namespace <%=Namespace%>
 {
     public class MyDBHelper
     {
-        public static readonly string connstr = "<%=ConnectionString%>;
- 
+        public static readonly string connstr = System.Configuration.ConfigurationManager.AppSettings["MySqlConnectionString"];
         #region 执行Command.ExecuteNonQuery(),返回受影响的行数
         /// <summary>
         /// 执行Command.ExecuteNonQuery(),返回受影响的行数

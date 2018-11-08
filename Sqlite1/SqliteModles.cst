@@ -1,0 +1,115 @@
+﻿<%@ CodeTemplate Language="C#" TargetLanguage="C#" Src="" Inherits="" Debug="False" Description="Template description here." %>
+<%@ Property Name="TableName" Type="TableSchema" Default="" Optional="False" Category="" Description="select your table" OnChanged="" Editor="" EditorBase="" Serializer="" %>
+<%@ Property Name="space" Type="String" Default="" Optional="False" Category="" Description="Input your NameSpace" OnChanged="" Editor="" EditorBase="" Serializer="" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+public string GetNowTime()
+{
+	return DateTime.Now.ToString();
+}
+public string GetTableName(TableSchema table)
+{
+    string[] strTemps = table.Name.Split('_');
+    string strName = null;
+    for(int i=1;i<strTemps.Length;i++)
+    {
+       string strTemp =strTemps[i].Substring(0,1);
+       strName += strTemp +strTemps[i].Remove(0,1).ToLower();
+    }
+	return strName ;
+}
+public string GetColumnType(ColumnSchema column)
+{
+	if (column.Name.EndsWith("TypeCode")) return column.Name;
+	
+	switch (column.DataType)
+	{
+		case DbType.AnsiString: return "string";
+		case DbType.AnsiStringFixedLength: return "string";
+		case DbType.Binary: return "byte[]";
+		case DbType.Boolean: return "bool";
+		case DbType.Byte: return "byte";
+		case DbType.Currency: return "decimal";
+		case DbType.Date: return "DateTime";
+		case DbType.DateTime: return "DateTime";
+		case DbType.Decimal: return "decimal";
+		case DbType.Double: return "double";
+		case DbType.Guid: return "Guid";
+		case DbType.Int16: return "short";
+		case DbType.Int32: return "int";
+		case DbType.Int64: return "long";
+		case DbType.Object: return "object";
+		case DbType.SByte: return "sbyte";
+		case DbType.Single: return "float";
+		case DbType.String: return "string";
+		case DbType.StringFixedLength: return "string";
+		case DbType.Time: return "TimeSpan";
+		case DbType.UInt16: return "ushort";
+		case DbType.UInt32: return "uint";
+		case DbType.UInt64: return "ulong";
+		case DbType.VarNumeric: return "decimal";
+		default:
+		{
+			return "__UNKNOWN__" + column.NativeType;
+		}
+	}
+}
+public string GetColumnName(ColumnSchema column)
+{
+	return column.Name;	
+}
+public string GetProperty(ColumnSchema column)
+{
+	string pro1 = column.Name.ToString().Substring(0,1).ToUpper();
+	string pro2 = column.Name.ToString().Substring(1,column.Name.Length-1);
+	return pro1 + pro2;
+}
+</script>
+#region
+/*************************************************/
+/***** Create by Guopping <%= GetNowTime() %>****/
+/*************************************************/
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace <%= space %>
+{
+	[Serializable]
+	public class <%= GetTableName(TableName) %>Model
+	{
+		public <%= GetTableName(TableName) %>Model()
+		{}
+
+		<% for(int i=0;i< TableName.NonForeignKeyColumns.Count; i++) {%>
+		private <%=GetColumnType(TableName.NonForeignKeyColumns[i]) %> _<%=GetColumnName(TableName.NonForeignKeyColumns[i])%>;
+		<% }%>
+		<%for(int i=0;i<TableName.ForeignKeyColumns.Count;i++) {%>
+		private <%=GetColumnType(TableName.ForeignKeyColumns[i])%> _<%=GetColumnName(TableName.ForeignKeyColumns[i])%>;
+		<%}%>
+		
+		<% for(int i=0;i< TableName.NonForeignKeyColumns.Count; i++) {%>
+		public <%=GetColumnType(TableName.NonForeignKeyColumns[i]) %> <%=GetProperty(TableName.NonForeignKeyColumns[i]) %>
+		{
+			get{return _<%=GetColumnName(TableName.NonForeignKeyColumns[i])%>;}
+			set{_<%=GetColumnName(TableName.NonForeignKeyColumns[i])%> = value;}
+		}
+		<%if(i < TableName.NonForeignKeyColumns.Count -1) {%>
+		
+		<%}%>
+		<%}%>
+		
+		<% for(int i=0;i< TableName.ForeignKeyColumns.Count; i++) {%>
+		public <%=GetColumnType(TableName.ForeignKeyColumns[i]) %> <%=GetProperty(TableName.ForeignKeyColumns[i]) %>
+		{
+			get{return _<%=GetColumnName(TableName.ForeignKeyColumns[i])%>;}
+			set{_<%=GetColumnName(TableName.ForeignKeyColumns[i])%> = value;}
+		}
+		<%if(i < TableName.ForeignKeyColumns.Count -1) {%>
+		
+		<%}%>
+		<%}%>
+	}
+}
+#endregion

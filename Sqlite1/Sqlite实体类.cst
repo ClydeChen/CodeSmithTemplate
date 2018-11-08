@@ -1,0 +1,427 @@
+﻿<%@ CodeTemplate Language="C#" ResponseEncoding="UTF-8" TargetLanguage="Text" Src="" Debug="True" Description="Template description here." %>
+<%@ Property Name="Table" Type="TableSchema" DeepLoad="True" Category="Context" Description="请选择数据表！" %>
+<%@ Property Name="TableName" Type="TableSchema" Default="" Optional="False" Category="" Description="select your table" OnChanged="" Editor="" EditorBase="" Serializer="" %>
+<%@ Property Name="NameSpace" Type="System.String" Default="" Optional="False" Category="Description" Description="请输入命名空间" %>
+<%@ Property Name="DefaultDatabase" Type="System.Boolean" Default="True" Optional="False" Category="Description" Description="请输入命名空间" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<script runat="template">
+public string GetNowTime()
+{
+	return DateTime.Now.ToString();
+}
+
+public string GetTableName(TableSchema table)
+{
+    string[] strTemps = table.Name.Split('_');
+    string strName = null;
+    for(int i=1;i<strTemps.Length;i++)
+    {
+       string strTemp =strTemps[i].Substring(0,1);
+       strName += strTemp +strTemps[i].Remove(0,1).ToLower();
+    }
+	return strName ;
+}
+
+</script>
+/*************************************************/
+/***** Create by Guopping <%= GetNowTime() %>****/
+/*************************************************/
+using System;
+using System.Data;
+using System.Text;
+using System.Collections.Generic;
+using System.Data.SQLite;
+using System.Data.SqlClient;
+using <%=NameSpace%>.DBUtility;
+using <%=NameSpace%>.Entity;
+
+namespace <%=NameSpace%>.DAL
+{
+ /// <summary>
+ /// 数据访问类<%=GetTableName(TableName)%>
+ /// </summary>
+ public class <%=GetTableName(TableName)%>DAL
+ {
+ <% if(!DefaultDatabase) {%>SQLiteHelper DbHelperSQL = new SQLiteHelper();<%}%>
+ #region 
+/// <summary>
+ /// 得到一个DataSet
+ /// </summary>
+ public static DataSet GetData(string strWhere)
+ {
+   StringBuilder strSql=new StringBuilder();
+   strSql.Append("select <%=GetColumnNameList(Table)%> ");
+   strSql.Append(" FROM <%=Table.Name%> ");
+   if(strWhere.Trim()!="")
+   {
+    strSql.Append(" where "+strWhere);
+   }
+   return SQLiteHelper.Query(strSql.ToString());
+ }
+
+ /// <summary>
+ /// 增加一条数据
+/// </summary>
+ public static void Add(<%=NameSpace%>.Entity.<%=GetTableName(TableName)%>Model model)
+ {
+   StringBuilder strSql=new StringBuilder();
+   strSql.Append("insert into <%=Table.Name%>(");
+   strSql.Append("<%=GetColumnNameList(Table)%>)");
+   strSql.Append(" values (");
+   strSql.Append("<%=GetColumnNameListPara(Table)%>)");
+   SQLiteParameter[] parameters = {
+     <%for(int i=0; i<Table.Columns.Count; i++) {%>
+     <%if(i == Table.Columns.Count -1){%>new SQLiteParameter("@<%=Table.Columns[i].Name%>", <%=GetSqlDbType(Table.Columns[i])%>,<%=Table.Columns[i].Size%>)<%}else{%>new SQLiteParameter("@<%=Table.Columns[i].Name%>", <%=GetSqlDbType(Table.Columns[i])%>,<%=Table.Columns[i].Size%>),<%}%>
+     <%}%>
+    };
+   <%for(int i=0; i<Table.Columns.Count; i++) {%>
+   parameters[<%=i%>].Value = model.<%=Table.Columns[i].Name%>;
+   <%}%>
+
+   SQLiteHelper.ExecuteSql(strSql.ToString(),parameters);
+ }
+ /// <summary>
+ /// 更新一条数据
+/// </summary>
+ public static void Update(<%=NameSpace%>.Entity.<%=GetTableName(TableName)%>Model model)
+ {
+   StringBuilder strSql=new StringBuilder();
+   strSql.Append("update <%=Table.Name%> set ");
+   strSql.Append("<%=GetUpdateColumn(Table)%>");
+   strSql.Append(" where <%=GetKeyColumn(Table).Name%>=@<%=GetKeyColumn(Table).Name%> ");
+   SQLiteParameter[] parameters = {
+     <%for(int i=0; i<Table.Columns.Count; i++) {%>
+     <%if(i == Table.Columns.Count -1){%>new SQLiteParameter("@<%=Table.Columns[i].Name%>", <%=GetSqlDbType(Table.Columns[i])%>,<%=Table.Columns[i].Size%>)<%}else{%>new SQLiteParameter("@<%=Table.Columns[i].Name%>", <%=GetSqlDbType(Table.Columns[i])%>,<%=Table.Columns[i].Size%>),<%}%>
+     <%}%>
+    };
+   <%for(int i=0; i<Table.Columns.Count; i++) {%>
+   parameters[<%=i%>].Value = model.<%=Table.Columns[i].Name%>;
+   <%}%>
+
+   SQLiteHelper.ExecuteSql(strSql.ToString(),parameters);
+ }
+
+ /// <summary>
+ /// 删除数据
+/// </summary>
+ public static void Delete(<% =GetPrimaryKeyType(Table) + " " + GetKeyColumn(Table).Name.ToLower()%>)
+ {
+   StringBuilder strSql=new StringBuilder();
+   strSql.Append("delete <% =Table.Name%> ");
+   strSql.Append(" where <% =GetKeyColumn(Table).Name %>=@<% =GetKeyColumn(Table).Name %> ");
+   SQLiteParameter[] parameters = {
+     new SQLiteParameter("@<% =GetKeyColumn(Table).Name %>", <%=GetKeyColumnSqlType(Table)%>, <%=GetKeyColumnSqlLength(Table)%>)};
+   parameters[0].Value = <% =GetKeyColumn(Table).Name.ToLower() %>;
+
+   SQLiteHelper.ExecuteSql(strSql.ToString(),parameters);
+ }
+
+ /// <summary>
+ /// 得到一个泛型集合
+/// </summary>
+ public static List<<%=NameSpace%>.Entity.<%=GetTableName(Table)%>Model> GetList(string strWhere)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.Append("select <%=GetColumnNameList(Table)%> ");
+            strSql.Append(" FROM <%=Table.Name%> ");
+            if (strWhere.Trim() != "")
+            {
+                strSql.Append(" where " + strWhere);
+            }
+
+            List<<%=NameSpace%>.Entity.<%=GetTableName(Table)%>Model> list = new List<<%=NameSpace%>.Entity.<%=GetTableName(Table)%>Model>();
+
+            using (SQLiteDataReader reader = SQLiteHelper.ExecuteReader(strSql.ToString()))
+            {
+                while (reader.Read())
+                {
+                    <%=NameSpace%>.Entity.<%=GetTableName(Table)%>Model model = new <%=NameSpace%>.Entity.<%=GetTableName(Table)%>Model();
+      <% for(int i=0; i<Table.Columns.Count; i++){%>
+      model.<%=Table.Columns[i].Name%> = <%=GetSqlReader(Table.Columns[i])%>;
+    <%}%>
+                    list.Add(model);
+                }
+                reader.Close();
+            }
+
+            return list;
+        }
+
+ /// <summary>
+ /// 得到一个对象实体
+/// </summary>
+ public static <%=NameSpace%>.Entity.<%=GetTableName(TableName)%>Model GetModel(<% =GetPrimaryKeyType(Table) + " " + GetKeyColumn(Table).Name.ToLower()%>)
+ {
+   StringBuilder strSql=new StringBuilder();
+   strSql.Append("select <%=GetColumnNameList(Table)%> from <%=Table.Name%> ");
+   strSql.Append(" where <%=GetKeyColumn(Table).Name%>=@<%=GetKeyColumn(Table).Name%> ");
+   SQLiteParameter[] parameters = {
+     new SQLiteParameter("@<% =GetKeyColumn(Table).Name %>", <%=GetKeyColumnSqlType(Table)%>, <%=GetKeyColumnSqlLength(Table)%>)};
+   parameters[0].Value = <%=GetKeyColumn(Table).Name.ToLower()%>;
+
+   <%=NameSpace%>.Entity.<%=GetTableName(Table)%>Model model = new <%=NameSpace%>.Entity.<%=GetTableName(Table)%>Model();
+   DataSet ds=SQLiteHelper.Query(strSql.ToString(),parameters);
+   if(ds.Tables[0].Rows.Count>0)
+   {
+    <% for(int i=0; i<Table.Columns.Count; i++){%>
+    model.<%=Table.Columns[i].Name%> = <%=GetDataSet(Table.Columns[i])%>;
+    <%}%>
+    return model;
+   }
+   else
+   {
+    return null;
+   }
+ }
+ #endregion
+ }
+}
+<script runat="template">
+public string GetUpdateColumn(TableSchema table)
+{
+ string strUpdate = "";
+ for(int i=0; i<table.Columns.Count; i++)
+ {
+ if(!table.Columns[i].IsPrimaryKeyMember)
+ {
+   if(strUpdate == string.Empty)
+    strUpdate = "" + table.Columns[i].Name + "=@" + table.Columns[i].Name;
+   else
+    strUpdate = strUpdate + "," + "" + table.Columns[i].Name + "=@" + table.Columns[i].Name;
+ }
+ }
+ return strUpdate;
+}
+
+public string GetDataSet(ColumnSchema column)
+{
+ string sqlReader = "ds.Tables[0].Rows[0][\"" + column.Name + "\"]";
+ 
+string csharpType = GetCSharpType(column);
+ if(csharpType.ToLower() == "string")
+ return sqlReader + ".ToString()";
+ 
+string temp = "(" + GetCSharpType(column) + ")" + sqlReader;
+ if(column.AllowDBNull)
+ {
+ temp = sqlReader + ".ToString() == String.Empty ? 0 : " + temp;
+ }
+ 
+temp = temp;
+ return temp;
+}
+
+public string GetSqlReader(ColumnSchema column)
+{
+ string sqlReader = "reader[\"" + column.Name + "\"]";
+ 
+string csharpType = GetCSharpType(column);
+ if(csharpType.ToLower() == "string")
+ return sqlReader + ".ToString()";
+ 
+string temp = "(" + GetCSharpType(column) + ")" + sqlReader;
+ if(column.AllowDBNull)
+ {
+ temp = sqlReader + ".ToString() == String.Empty ? 0 : " + temp;
+ }
+ 
+temp = temp;
+ return temp;
+}
+
+public string GetColumnNameListPara(TableSchema table)
+{
+ string columnList = "";
+ 
+for(int i=0; i<table.Columns.Count; i++)
+ {
+ if(columnList == string.Empty)
+   columnList = "@" + table.Columns[i].Name;
+ else
+   columnList = columnList + ",@" + table.Columns[i].Name;
+ }
+ 
+return columnList;
+}
+
+public string GetColumnNameList(TableSchema table)
+{
+ string columnList = "";
+ 
+for(int i=0; i<table.Columns.Count; i++)
+ {
+ if(columnList == string.Empty)
+   columnList = "" + table.Columns[i].Name + "";
+ else
+   columnList = columnList + "," + table.Columns[i].Name + "";
+ }
+ 
+return columnList;
+}
+
+public ColumnSchema GetKeyColumn(TableSchema table)
+{
+ ColumnSchema column = null;
+ for(int i=0; i<table.Columns.Count; i++)
+ {
+ if(table.Columns[i].IsPrimaryKeyMember)
+   column = table.Columns[i];
+ }
+ return column;
+}
+
+public string GetKeyColumnSqlType(TableSchema table)
+{
+ ColumnSchema column = GetKeyColumn(table);
+ if(column == null)
+ return string.Empty;
+
+ return GetSqlDbType(column);
+}
+
+public int GetKeyColumnSqlLength(TableSchema table)
+{
+ ColumnSchema column = GetKeyColumn(table);
+ if(column == null)
+ return 0;
+
+ return column.Size;
+}
+
+public string GetPrimaryKeyType(TableSchema table)
+{
+ int columnIndex = 0;
+ for(int i=0; i<table.Columns.Count; i++)
+ {
+ if(table.Columns[i].IsPrimaryKeyMember)
+   columnIndex = i;
+ }
+ 
+return GetCSharpType(table.Columns[columnIndex]);
+}
+
+public string GetSqlDbType(ColumnSchema column) 
+{ 
+switch (column.NativeType.ToLower()) 
+{ 
+case "bigint": return "DbType.BigInt"; 
+case "binary": return "DbType.Binary"; 
+case "bit": return "DbType.Bit"; 
+case "char": return "DbType.Char"; 
+case "datetime": return "DbType.DateTime"; 
+case "decimal": return "DbType.Decimal"; 
+case "float": return "DbType.Float"; 
+case "image": return "DbType.Image"; 
+case "int": return "DbType.Int32"; 
+case "money": return "DbType.Money"; 
+case "nchar": return "DbType.NChar"; 
+case "ntext": return "DbType.NText"; 
+case "numeric": return "DbType.Decimal"; 
+case "nvarchar": return "DbType.NVarChar"; 
+case "real": return "DbType.Real"; 
+case "smalldatetime": return "DbType.SmallDateTime"; 
+case "smallint": return "DbType.SmallInt"; 
+case "smallmoney": return "DbType.SmallMoney"; 
+case "sql_variant": return "DbType.Variant"; 
+case "sysname": return "DbType.NChar"; 
+case "text": return "DbType.Text"; 
+case "timestamp": return "DbType.Timestamp"; 
+case "tinyint": return "DbType.TinyInt"; 
+case "uniqueidentifier": return "DbType.UniqueIdentifier"; 
+case "varbinary": return "DbType.VarBinary"; 
+case "varchar": return "DbType.String"; 
+case "date": return "DbType.DateTime"; 
+case "integer": return "DbType.Int32";
+default: return "__UNKNOWN__" + column.NativeType; 
+} 
+}
+
+public string GetCSharpType(ColumnSchema column)
+{
+ string para = "";
+ if (column.Name.EndsWith("TypeCode")) 
+return column.Name;
+
+ switch (column.DataType)
+ {
+ case DbType.AnsiString: 
+   para = "string";
+   break;
+ case DbType.AnsiStringFixedLength: 
+   para = "string";
+   break;
+ case DbType.Binary: 
+   para = "byte[]";
+   break;
+ case DbType.Boolean: 
+   para = "bool";
+   break;
+ case DbType.Byte: 
+   para = "int";
+   break;
+ case DbType.Currency: 
+   para = "decimal";
+   break;
+ case DbType.Date: 
+   para = "DateTime";
+   break;
+ case DbType.DateTime: 
+   para = "DateTime";
+   break;
+ case DbType.Decimal: 
+   para = "decimal";
+   break;
+ case DbType.Double: 
+   para = "double";
+   break;
+ case DbType.Guid: 
+   para = "Guid";
+   break;
+ case DbType.Int16: 
+   para = "short";
+   break;
+ case DbType.Int32: 
+   para = "int";
+   break;
+ case DbType.Int64:
+   para = "long";
+   break;
+ case DbType.Object: 
+   para = "object";
+   break;
+ case DbType.SByte: 
+   para = "sbyte";
+   break;
+ case DbType.Single: 
+   para = "float";
+   break;
+ case DbType.String: 
+   para = "string";
+   break;
+ case DbType.StringFixedLength: 
+   para = "string";
+   break;
+ case DbType.Time: 
+   para = "TimeSpan";
+   break;
+ case DbType.UInt16: 
+   para = "ushort";
+   break;
+ case DbType.UInt32: 
+   para = "uint";
+   break;
+ case DbType.UInt64: 
+   para = "ulong";
+   break;
+ case DbType.VarNumeric: 
+   para = "decimal";
+   break;
+ default: 
+   para = "__UNKNOWN__" + column.NativeType;
+   break;
+ }
+
+ return para;
+}
+</script>

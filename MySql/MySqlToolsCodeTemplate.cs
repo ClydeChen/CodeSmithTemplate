@@ -119,10 +119,6 @@ public class ToolsCodeTemplate:CodeTemplate
 	}
 	public void PrintHeader()
 	{
-		Response.WriteLine("//============================================================");
-		Response.WriteLine("//http://codelover.link author:李国宝");
-		Response.WriteLine("//============================================================");
-		Response.WriteLine();
 	}
 	
 	public string GetPKName(TableSchema TargetTable)

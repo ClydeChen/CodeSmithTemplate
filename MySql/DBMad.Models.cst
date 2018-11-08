@@ -1,5 +1,5 @@
 ﻿<%@ CodeTemplate Language="C#" TargetLanguage="C#" 
-	Src="ToolsCodeTemplate.cs" Inherits="ToolsCodeTemplate"%>
+	Src="MySqlToolsCodeTemplate.cs" Inherits="ToolsCodeTemplate"%>
 <%@ Property Name="TargetTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="TargetTable that the object is based on." %>
 <%@ Property Name="ModelsNamespace" Default="Model" Type="System.String" Category="Context" Description="TargetTable that the object is based on." %>
 <%@ Assembly Name="SchemaExplorer" %>
